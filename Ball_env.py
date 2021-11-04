@@ -79,6 +79,8 @@ class Ball_env(gym.Env):
         self.rob_vel = [0,0,0]          # robot velocity, vx, vy, ω
         self.steps = 0                  # the steps
         self.ignore_hitting = False     # avoid bug when hitting
+        return self.gate_pos, self.ball_pos, self.ball_vel, self.rob_pos, self.rob_vel
+        
     def step(self,action):
         self.update_velocity(action) # update the velocity for football and robot
         self.update_position() # update the position for football and robot 
