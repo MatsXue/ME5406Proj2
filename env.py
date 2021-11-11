@@ -1,3 +1,17 @@
+# =============================================================================
+#   Filename         : Ball_env.py
+#
+#   Created On       : 2021-10-16 1:33
+#
+#   Last Modified    :
+#
+#   Revision         : 1.0
+#
+#   Author           : HuangYeshun
+#
+#   Description      : The env based on velocity
+# =============================================================================
+# import
 import gym
 import pyglet
 from pyglet import image
@@ -28,15 +42,16 @@ MAX_STEPS = 100000  # the max_steps for each episode
 # Adjust
 ROB_SIZE = 50  # the radius of robot (supposing circle)
 BALL_SIZE = 50  # the radius of football (supposing circle)
-CE_FRI = 0.0  # coefficient of friction
+CE_FRI = 0.01  # coefficient of friction
 MASS_RAT = 1  # the ratio of robot to football
 SLD_THD = 0  # the random sliding's threshold when robot knicking the ball
-VEL_THRD = 1  # the max velocity is considered as entering the gate
+VEL_THRD = 100  # the max velocity is considered as entering the gate
 SPEED_THRD = 500  # the max speed of the robot and the football
 ANG_SPEED_THRD = 20  # the max angular speed of the robot
 
 # Reward adjustment
-REACH_BALL = +100  # when the robot hits the ball
+REACH_GATE = 1000  # when the ball reaches the gate
+REACH_BALL = 100   # when the robot hits the ball
 HIT_WALL = 0  # the robot hits the wall
 DIS_RB_N = 1  # the nearer distance reward between the robot and the ball
 DIS_RB_F = -1  # the farther distance reward between the robot and the ball
@@ -385,10 +400,14 @@ class Ball_env(gym.Env):
         if self.old_distanceRB == -1:
             # first value of old_distance
             self.old_distanceRB = new_distanceRB
-        if (self.col_type == 1):
+        if (self.distance(self.ball_pos, self.gate_pos) <= BALL_SIZE and self.ball_vel[0] <= VEL_THRD and
+                self.ball_vel[1] <= VEL_THRD):
+            # the football reach the gate
+            reward = REACH_GATE
+        elif self.col_type == 1:
             # hits the ball
             reward = REACH_BALL
-        elif (self.col_type == 2):
+        elif self.col_type == 2:
             # the robot hits the wall
             reward = HIT_WALL
         elif (new_distanceRB < self.old_distanceRB):
@@ -433,7 +452,8 @@ class Ball_env(gym.Env):
     def is_end(self):
         is_end = False
         # situation1: the robot hits the football
-        if (self.col_type == 1):
+        if (self.distance(self.ball_pos, self.gate_pos) <= BALL_SIZE and self.ball_vel[0] <= VEL_THRD and
+                self.ball_vel[1] <= VEL_THRD):
             is_end = True
         # # situation2: too much steps
         # if (self.steps > MAX_STEPS):
@@ -460,9 +480,7 @@ class Viewer(pyglet.window.Window):
 
         # load football
         # load the picture, cannot use pyglet.image.load()
-        pyglet.resource.path = ["C:/Users/Jerry.Doo/Desktop"]
-        pyglet.resource.reindex()
-        self.ball = pyglet.resource.image('soccer1.png')
+        self.ball = pyglet.resource.image('soccer.png')
         self.ball.width = 2 * BALL_SIZE
         self.ball.height = 2 * BALL_SIZE
         self.ball.anchor_x = self.ball.width // 2
