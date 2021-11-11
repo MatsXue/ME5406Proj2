@@ -1,0 +1,8 @@
+Hyper adjust:
+reward
+	remove -10
+	magnitude
+gamma
+NN
+mass ratio
+friction
